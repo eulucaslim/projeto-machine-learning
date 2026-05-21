@@ -14,3 +14,35 @@ temperatura e vento e o Target é se vai chover amanhã.
 ```
 Pelo fato de se tratar da mesma informação passada anteriormente, ou seja, não são fenômenos novos e sim derivações diretas de váriaveis que já temos e isso causa um fênomeno chamado de Multicolinearidade.
 ``` 
+
+## O que é interpolação
+```
+É o processo de estimular um valor faltante com base nos vizinhos mais próximos, ou seja, gera uma estimativa com base em um determinado comportamento de dados
+```
+
+## O que é interpolação linear
+```
+Traça uma linha reta entre dois pontos e pega o valor entre eles
+```
+
+## O que é interpolação temporal
+```
+Distância real no tempo por meio de timestamp
+```
+
+## Por que os dados de Precipitação Total (mm) foram tratados com 0
+```
+Em dados meteorológicos, ausência de precipitação registrada indica evento nulo, não ausência de medição.
+```
+
+## Por que a Pressão reduzida ao nível do mar foi utilizada a forma de interpolação para tratamento?
+```
+Para esse caso a pressão atmosféricas diminui lentamente e de forma contínua, então tornando a interpolação temporal mais viável para esse caso para pequenos intervalos ausentes.
+```
+
+## Por que foi necesssário a criação de um DatetimeIndex ?
+```
+Por conta que na tratativa de dados foi utilizado a técnica de interpolação temporal para esses dados e era necessário saber a distância entre os dados de forma que o pandas pudesse distinguir temporalmente, dessa forma foi necessário a criação da Series datetime para suprir essa necessidade.
+```
+
+## O que seriam outliers?
