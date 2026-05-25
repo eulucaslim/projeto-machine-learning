@@ -46,3 +46,6 @@ Por conta que na tratativa de dados foi utilizado a técnica de interpolação t
 ```
 
 ## O que seriam outliers?
+```
+Sao os valores encontrados em nosso dataset que estao com uma diferenca muito grande de valor em relacao aos outros, e para trata-los existem varias maneiras por IQR, Z-Score e Quartil, a forma utilizada na nossa verificacao foi o IQR
+```

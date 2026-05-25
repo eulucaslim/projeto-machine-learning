@@ -47,4 +47,27 @@ A ideia principal é determinar se irá chover ou não no dia 20 de maio de 2026
 
 ## 2. Pré-processamento
 ### 2.1. Verificar e tratar valores ausentes (NaN / nulos)
-x
+Dependendo do valor que foi verificado nas Series, foi realizado um tratamento especifico, para dados da coluna de precipitacao foi adicionado 0 as valores null ou NaN, ja em outras foram realizadas de outras maneiras.
+
+### 2.2 Decidir entre remover as linhas, preencher com média/mediana ou outro criterio
+Para os valores meteorologicos tiveram que realizar o seguinte tratamento, foi utilizado a tecnica de Interpolacao temporal, que fazia o seguinte,
+adiciona o valor de acordo com o tempo entre a linha anterior e a linha posterior do valor null e adicionava o valor referente. Alem disso, teve que ser feito a criacao de um indice em datetime para que essa conversao tivesse dado certo.
+
+### 2.3 Identificar e tratar outliers, se houver
+Nesse caso, para verificar a presenca de outliers, foi utilizado um metodo de verificacao chamado IQR (Interquartile Range) ou Intervalo Interquartil que consiste na seguinte maneira, possui um per-quartil - Q1 com valores de 25% e o Q3 com valores de 75%, e entao fazemos uma subtracao do Q3 - Q1 para descobrir o valor do IQR e entao verificamos o valor minimo e o maximo para nao ser considerado um outlier. 
+
+### 2.4 Converter variáveis categóricas em número, se necessário
+A maioria dos valores ja estava em float64 e entao nao foi preciso. 
+
+### 2.5 Dividir os dados em conjuntos de treino e teste
+Para isso a divisao foi feita com base em 80% dos dados serem de testes que seriam equivalentes a 14 dias e para teste seria os 20% dos dados do dia 15 ate dia 19.
+
+## 3. Treinamento do Modelo
+### 3.1 Como o modelo escolhido funciona, de forma intuitiva
+O modelo escolhido para resolver esse problema se chama Regressao Linear e funciona da seguinte maneira: Tenta encontrar uma linha (ou plano) que melhor se ajuste aos dados, minimizando os erros entre os valores reais e os valores previstos, aprendendo os pesos para cada feature, no nosso caso o modelo aprende quanto cada variável meteorológica influencia a chuva.
+
+### 3.2 Quais parâmetros foram configurados e por quê
+Foram adicionado os dois parametros o de 'fit_intercept=True' que aprende o termo independente, ou seja, a precipitacao nao comeca em zero e o 'n_jobs=-1' utiliza todos os nucleos da CPU para ter um melhor desempenho computacional.
+
+### 3.3 Como o modelo foi treinado (qual funcao/metodo) foi chamado
+A biblioteca utilizada para realizar o treinamento foi o sklearn chamando a classe do treinamento do modelo LinearRegression e para treinar utilizamos os dados de feature e de target chamando o metodo fit que calcula os coeficientes minimizando o erro quadratico (MSE) e tambem aprende a relacao entre o clima e a precitacao.
