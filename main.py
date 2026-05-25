@@ -1,9 +1,10 @@
-from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
 from sklearn.metrics import (
-    mean_squared_error,
-    root_mean_squared_error,
-    mean_absolute_error, 
-    r2_score
+    classification_report,
+    confusion_matrix,
+    ConfusionMatrixDisplay,
+    roc_auc_score,
+    roc_curve
 )
 from utils import get_outliers
 import matplotlib.pyplot as plt
@@ -94,6 +95,15 @@ df_filtrado["VENTO, DIRECAO HORARIA (gr)(° (gr))"] = (
 )
 # Coluna Pressao Atmosferica - Utiliza o dado futuro para explicar o passado
 df_filtrado["PRESSAO ATMOSFERICA REDUZIDA NIVEL DO MAR, AUT(mB)"] = df_filtrado["PRESSAO ATMOSFERICA REDUZIDA NIVEL DO MAR, AUT(mB)"].bfill()
+
+# Acumulado de chuva nas últimas 6h e 24h anteriores ao momento atual
+# Isso dá ao modelo contexto sobre o estado úmido da atmosfera
+df_filtrado['precip_acum_6h']  = df_filtrado['PRECIPITACAO TOTAL, HORARIO(mm)'].rolling(6).sum()
+df_filtrado['precip_acum_24h'] = df_filtrado['PRECIPITACAO TOTAL, HORARIO(mm)'].rolling(24).sum()
+
+# Componentes temporais — sazonalidade intra-diária e mensal
+df_filtrado['hora'] = df_filtrado.index.hour
+df_filtrado['mes']  = df_filtrado.index.month
 print("\nEsses foram a quantidade de valores nulos após o pré-processamento\n", df_filtrado.isna().sum(), '\n')
 print("=" * 60, "\n")
 
@@ -110,8 +120,15 @@ print("=" * 60, "\n")
 df_filtrado['target_chuva_d+1'] = (
     df_filtrado['PRECIPITACAO TOTAL, HORARIO(mm)']
     .shift(-24)
+    .gt(0.1)
+    .astype(int)
 )
-df_filtrado = df_filtrado.dropna(subset=['target_chuva_d+1'])
+df_filtrado = df_filtrado.dropna(subset=['precip_acum_6h', 'precip_acum_24h'])
+
+print("Distribuição do target:")
+print(df_filtrado['target_chuva_d+1'].value_counts())
+print(f"% de horas com chuva: {df_filtrado['target_chuva_d+1'].mean()*100:.1f}%\n")
+
 
 # Dividindo os dados como treino (80% da quantidade total) e teste (20% da quantidade total)
 valor_treino = int(len(df_filtrado) * 0.8)
@@ -129,6 +146,10 @@ features = [
     'UMIDADE RELATIVA DO AR, HORARIA(%)',
     'VENTO, VELOCIDADE HORARIA(m/s)',
     'VENTO, RAJADA MAXIMA(m/s)',
+    'precip_acum_6h',
+    'precip_acum_24h',
+    'hora',
+    'mes',
 ]
 
 # Dados de Target e de features para treino e para teste
@@ -138,38 +159,84 @@ y_treino = treino[target]
 X_teste = teste[features]
 y_teste = teste[target]
 
-modelo = LinearRegression(
-    fit_intercept=True,  # A precipitação não começa em zero
-    n_jobs=-1            # usa todos os núcleos da CPU
+# max_depth=6  → limita a profundidade da árvore para evitar overfitting.
+#                Sem limite, a árvore memoriza o treino e vai mal no teste.
+# min_samples_split=50 → um nó só é dividido se tiver ao menos 50 amostras,
+#                        evitando divisões em grupos minúsculos sem significado.
+# min_samples_leaf=20  → cada folha precisa ter ao menos 20 amostras,
+#                        garantindo que as previsões finais sejam generalizáveis.
+# random_state=42      → garante reprodutibilidade dos resultados.
+# class_weight='balanced' → corrige o desbalanceamento automaticamente.
+# O sklearn pesa cada classe inversamente à sua frequência,
+# fazendo o modelo "levar a sério" as horas com chuva mesmo sendo minoria.
+modelo = DecisionTreeClassifier(
+    max_depth=6,
+    min_samples_split=50,
+    min_samples_leaf=20,
+    class_weight='balanced',
+    random_state=42
 )
 
 modelo.fit(X_treino, y_treino)
 
-# Coeficientes 
+y_pred      = modelo.predict(X_teste)
+y_pred_prob = modelo.predict_proba(X_teste)[:, 1]  # probabilidade da classe 1
 
-print("Esses sao os valores que mais influenciam a chuva em ordem decrescente: \n")
-coeficientes = pd.Series(
-    modelo.coef_,
-    index=X_treino.columns
-).sort_values(ascending=False)
+print("=" * 60)
+print("MÉTRICAS DE AVALIAÇÃO")
+print("=" * 60)
+# Precision, Recall e F1 separados por classe
+print(classification_report(y_teste, y_pred, target_names=["Sem chuva (0)", "Com chuva (1)"]))
 
-print(coeficientes)
+auc = roc_auc_score(y_teste, y_pred_prob)
+print(f"AUC-ROC: {auc:.4f}\n")
 
-# Gerando previsoes no conjunto de teste
-y_pred = modelo.predict(X_teste)
+# Retornando as features mais importantes
+print("=" * 60)
+print("IMPORTÂNCIA DAS VARIÁVEIS (ordem decrescente)")
+print("=" * 60)
+importancias = pd.Series(modelo.feature_importances_, index=features).sort_values(ascending=False)
+print(importancias)
+print()
 
-mse = mean_squared_error(y_teste, y_pred) # erro médio interpretáve
-rmse = root_mean_squared_error(y_teste, y_pred) # penaliza erros grandes (chuvas fortes)
-mae = mean_absolute_error(y_teste, y_pred)
-r2 = r2_score(y_teste, y_pred) # capacidade explicativa
+# Gerando a matriz de confusao com as importantes features.
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
-print(f"MSE: {mse:.4f}")
-print(f"RMSE: {rmse:.4f}")
-print(f"MAE: {mae:.4f}")
-print(f"R²: {r2:.4f}")
+# Gráfico 1: Matriz de Confusão
+cm = confusion_matrix(y_teste, y_pred)
+ConfusionMatrixDisplay(cm, display_labels=["Sem chuva", "Com chuva"]).plot(ax=axes[0], colorbar=False)
+axes[0].set_title("Matriz de Confusão")
 
-plt.scatter(y_teste, y_pred, alpha=0.5)
-plt.xlabel("Chuva Real (mm)")
-plt.ylabel("Chuva Prevista (mm)")
-plt.title("Real vs Previsto")
+# Gráfico 2: Importância das features
+importancias.plot(kind='barh', ax=axes[1])
+axes[1].set_title("Importância das Variáveis")
+axes[1].set_xlabel("Importância")
+axes[1].invert_yaxis()
+
+# Gráfico 3: Curva ROC
+fpr, tpr, _ = roc_curve(y_teste, y_pred_prob)
+axes[2].plot(fpr, tpr, label=f"AUC = {auc:.3f}")
+axes[2].plot([0,1], [0,1], 'r--', label="Aleatório")
+axes[2].set_xlabel("Taxa de Falso Positivo")
+axes[2].set_ylabel("Taxa de Verdadeiro Positivo")
+axes[2].set_title("Curva ROC")
+axes[2].legend()
+
+plt.tight_layout()
 plt.show()
+
+# Gráfico 3: Primeiros níveis da árvore (interpretabilidade)
+plt.figure(figsize=(20, 8))
+plot_tree(
+    modelo,
+    feature_names=features,
+    filled=True,
+    max_depth=3,   # mostra só os 3 primeiros níveis para não poluir
+    fontsize=9
+)
+plt.title("Estrutura da Árvore de Decisão (primeiros 3 níveis)")
+plt.tight_layout()
+plt.show()
+
+# Versão texto da árvore (primeiros 3 níveis) — útil para o relatório
+print(export_text(modelo, feature_names=features, max_depth=3))

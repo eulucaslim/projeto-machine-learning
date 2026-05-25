@@ -49,3 +49,8 @@ Por conta que na tratativa de dados foi utilizado a técnica de interpolação t
 ```
 Sao os valores encontrados em nosso dataset que estao com uma diferenca muito grande de valor em relacao aos outros, e para trata-los existem varias maneiras por IQR, Z-Score e Quartil, a forma utilizada na nossa verificacao foi o IQR
 ```
+
+## O que seria uma Arvore de Decisao
+```
+Uma Árvore de Decisão é um modelo de Inteligência Artificial que toma decisões passo a passo, de forma parecida com o raciocínio humano.
+```
