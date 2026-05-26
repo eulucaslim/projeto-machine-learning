@@ -80,3 +80,24 @@ entao seria 90 + 80 / 200 = 85%
 ```
 No caso seria o quanto de acuracia o meu modelo pode ter em um intervalo de 0.5 ate 1.0, quanto mais proximo das bordas, ou seja, quando o valor da AOC estiver mais proximo de 1 significa que o modelo possui uma taxa de acerto bem maior.
 ```
+
+## O que eh Precisao - Precision  
+```
+Mede quanto a exatidao das previsoes positivas
+```
+
+## O que eh Revocacao - Recall
+```
+Identifica a fracao de previsoes corretamentes identificadas
+```
+
+## O que eh Acuraria - Accuracy
+```
+mede as fracoes de previsoes corretas.
+```
+
+## O que eh F1-score
+```
+é uma métrica fundamental em Machine Learning que avalia o desempenho de modelos de classificação
+Ele calcula a média harmônica entre a precisão e o recall que varia entre os valores de 0 e 1 
+```
