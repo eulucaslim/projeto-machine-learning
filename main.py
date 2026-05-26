@@ -159,6 +159,7 @@ y_treino = treino[target]
 X_teste = teste[features]
 y_teste = teste[target]
 
+# Parametros utilizados
 # max_depth=6  → limita a profundidade da árvore para evitar overfitting.
 #                Sem limite, a árvore memoriza o treino e vai mal no teste.
 # min_samples_split=50 → um nó só é dividido se tiver ao menos 50 amostras,
@@ -169,17 +170,23 @@ y_teste = teste[target]
 # class_weight='balanced' → corrige o desbalanceamento automaticamente.
 # O sklearn pesa cada classe inversamente à sua frequência,
 # fazendo o modelo "levar a sério" as horas com chuva mesmo sendo minoria.
+
 modelo = DecisionTreeClassifier(
-    max_depth=6,
+    # Define a profundidade máxima da árvore
+    max_depth=6, 
+    # Mínimo de amostras necessário para dividir um nó.
     min_samples_split=50,
+    # Minimo de valor final das folhas
     min_samples_leaf=20,
+    # Usado quando as classes estão desbalanceadas
     class_weight='balanced',
+    # Define a semente aleatória para nao gerar diversas arvores
     random_state=42
 )
 
 modelo.fit(X_treino, y_treino)
 
-y_pred      = modelo.predict(X_teste)
+y_pred = modelo.predict(X_teste)
 y_pred_prob = modelo.predict_proba(X_teste)[:, 1]  # probabilidade da classe 1
 
 print("=" * 60)

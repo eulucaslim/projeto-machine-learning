@@ -54,3 +54,29 @@ Sao os valores encontrados em nosso dataset que estao com uma diferenca muito gr
 ```
 Uma Árvore de Decisão é um modelo de Inteligência Artificial que toma decisões passo a passo, de forma parecida com o raciocínio humano.
 ```
+
+## Para que serve uma matrix de confusao?
+```
+Uma tabela de dimensao de 2x2 para verificar a possibilidade de falsos positivos, falsos negativos, verdadeiro positivos e verdadeiros negativos para modelos de classificao binario com dois valores distintos, como Sem Chuva e com Chuva em nosso caso.
+```
+
+## O que seria a sensibilidade de um teste?
+```
+Seria o Numero de afetados detectados por um teste, por exemplo, se tiver 100 pessoas doentes e o teste detectar 90 pessoas, significa que a sensibilidade eh de 90% e os falsos negativos sao de 10%
+```
+
+## O que seria a especificidade de um teste?
+```
+Numero de normais apontados como normais por um teste , por exemplo, se a populacao possui 100 pessoas normais um teste aponta que 80 desses individuos como normais, significa que a especificidade eh de 80% e os falsos positivos de 20%.
+```
+
+## O que seria a acuracia dignostica de um teste?
+```
+Numero de normais apontados como normais + o numero de normais como doentes de um teste fazendo uma media com a quantidade total. No caso possuiam 200 pessoas
+entao seria 90 + 80 / 200 = 85% 
+```
+
+## O que eh a curva de ROC
+```
+No caso seria o quanto de acuracia o meu modelo pode ter em um intervalo de 0.5 ate 1.0, quanto mais proximo das bordas, ou seja, quando o valor da AOC estiver mais proximo de 1 significa que o modelo possui uma taxa de acerto bem maior.
+```
